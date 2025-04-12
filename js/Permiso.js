@@ -1,82 +1,78 @@
-// Variable global que controla si el jugador tiene permiso para jugar
+// Variables globales
 let permisoParaJugar = false;
-// Variables para almacenar la fecha de nacimiento y la edad del jugador
-let fechaNacimiento;
-let edad;
-let nombre;
+let nombre = "";
+let edad = 0;
 
-// Función que calcula la edad a partir de una fecha de nacimiento
+// Elemento donde se mostrará el juego o los mensajes de validación
+const contenedorJuego = document.getElementById("juego");
+
+// Mostrar formulario inicial
+contenedorJuego.innerHTML = `
+    <div class="permiso">
+        <h2>Bienvenido al juego 🪨📄✂️</h2>
+        <label for="nombre">Ingresa tu nombre:</label>
+        <input type="text" id="nombre" placeholder="Tu nombre aquí" required>
+        <label for="fechaNacimiento">Fecha de nacimiento:</label>
+        <input type="date" id="fechaNacimiento" required>
+        <button id="validar">Validar</button>
+    </div>
+`;
+
+// Función para calcular la edad
 function calcularEdad(fechaNacimiento) {
-    let hoy = new Date();                        // Fecha actual
-    let nacimiento = new Date(fechaNacimiento);  // Fecha de nacimiento convertida a formato Date
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();  // Diferencia en años
-
-    // Determinar si el cumpleaños ya ocurrió este año
-    let mes = hoy.getMonth() - nacimiento.getMonth();
-    let dia = hoy.getDate() - nacimiento.getDate();
-
-    // Si el mes actual es anterior al mes de nacimiento, o si es el mismo mes pero aún no ha pasado el día del cumpleaños, restar un año
-    if (mes < 0 || (mes === 0 && dia < 0)) {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
         edad--;
     }
-
-    return edad;  // Se retorna la edad calculada
+    return edad;
 }
 
-// Solicitar el nombre del jugador
-nombre = prompt("Ingresa tu nombre:");
+// Validación del permiso
+document.getElementById("validar").addEventListener("click", () => {
+    const inputNombre = document.getElementById("nombre").value.trim();
+    const inputFechaNacimiento = document.getElementById("fechaNacimiento").value;
 
-// Validar que el nombre no esté vacío o contenga solo espacios
-while (!nombre || nombre.trim() === "") {
-    nombre = prompt("Por favor, ingresa un nombre válido:");
-}
-
-// Bucle para solicitar y validar la fecha de nacimiento
-do {
-    fechaNacimiento = prompt("Ingresa tu fecha de nacimiento (DD/MM/AAAA):");
-
-    // Expresión regular para verificar el formato correcto de la fecha (DD/MM/AAAA)
-    let formatoFecha = /^\d{2}\/\d{2}\/\d{4}$/;
-    if (!formatoFecha.test(fechaNacimiento)) {
-        alert("Formato incorrecto. Usa el formato DD/MM/AAAA.");
-        continue;  // Volver a solicitar la fecha si el formato es incorrecto
+    if (!inputNombre) {
+        alert("Por favor, ingresa un nombre válido.");
+        return;
     }
 
-    // Dividir la fecha en partes (día, mes y año)
-    let partes = fechaNacimiento.split("/");
-    let dia = parseInt(partes[0]);
-    let mes = parseInt(partes[1]);
-    let año = parseInt(partes[2]);
-
-    // Validar que las partes sean números válidos
-    if (isNaN(dia) || isNaN(mes) || isNaN(año)) {
-        alert("La fecha contiene valores no válidos. Inténtalo de nuevo.");
-        continue;  // Volver a solicitar la fecha si alguna parte no es válida
+    if (!inputFechaNacimiento) {
+        alert("Por favor, selecciona una fecha de nacimiento.");
+        return;
     }
 
-    // Crear la fecha en formato Date (los meses en JavaScript van del 0 al 11)
-    let fechaValida = new Date(año, mes - 1, dia);
+    // Calcular edad
+    nombre = inputNombre;
+    edad = calcularEdad(inputFechaNacimiento);
 
-    // Verificar que la fecha ingresada sea una fecha real (por ejemplo, evitar el 30 de febrero)
-    if (
-        fechaValida.getFullYear() !== año ||
-        fechaValida.getMonth() !== mes - 1 ||
-        fechaValida.getDate() !== dia
-    ) {
-        alert("La fecha ingresada no es válida. Inténtalo de nuevo.");
-        continue;  // Volver a solicitar la fecha si no es válida
-    }
-
-    // Calcular la edad del jugador
-    edad = calcularEdad(`${año}-${mes}-${dia}`);
-
-    // Evaluar si el jugador tiene permiso para jugar según su edad
-    if (edad < 18) {
-        permisoParaJugar = false;  // Denegar permiso
+    if (edad > 18) {
+        permisoParaJugar = true;
+        contenedorJuego.innerHTML = `
+            <h2>🎉 ¡Bienvenido, ${nombre}! Tienes ${edad} años. Puedes jugar. 🎉</h2>
+            <button id="comenzar">Comenzar Juego</button>
+        `;
+        document.getElementById("comenzar").addEventListener("click", iniciarJuego);
+        
     } else {
-        alert("Bienvenido, " + nombre + ". Tienes " + edad + "años. ¡Puedes jugar! 🎉");
-        permisoParaJugar = true;  // Conceder permiso
+        permisoParaJugar = false;
+        contenedorJuego.innerHTML = `
+            <h2>Lo sentimos, ${nombre}. No tienes permiso para jugar. 💔</h2>
+            <button id="reiniciar">Reintentar</button>
+        `;
+        document.getElementById("reiniciar").addEventListener("click", () => location.reload());
     }
+});
 
-    break;  // Salir del bucle si se completó correctamente el proceso
-} while (true);
+// Función para iniciar el juego
+function iniciarJuego() {
+    // Aquí llamamos a la función que maneja el flujo del juego
+    if (permisoParaJugar) {
+        ejecutarJuego();
+    } else {
+        alert("No tienes permiso para jugar.");
+    }
+}
